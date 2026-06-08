@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: ktc-whatsapp-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT src.app:app
+    envVars:
+      - key: BITUNIX_API_KEY
+        sync: false
+      - key: BITUNIX_API_SECRET
+        sync: false
+      - key: GOOGLE_SHEETS_URL
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_BUSINESS_ACCOUNT_ID
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: DISCUSSION_GROUP_LINK
+        sync: false
+      - key: HELPER_PHONE
+        sync: false
+      - key: PORT
+        value: "5000"
+      - key: DEBUG
+        value: "False"
