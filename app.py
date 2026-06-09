@@ -10,11 +10,12 @@ from dotenv import load_dotenv
 import json
 from datetime import datetime
 
-from src.bitunix_client import BitunixClient
-from src.google_sheets_client import GoogleSheetsClient
-from src.whatsapp_client import WhatsAppClient
-from src.bot_logic import AuditBot
-from src.audit_logger import AuditLogger
+# 因為檔案都在同一層，所以把 src. 拿掉了
+from bitunix_client import BitunixClient
+from google_sheets_client import GoogleSheetsClient
+from whatsapp_client import WhatsAppClient
+from bot_logic import AuditBot
+from audit_logger import AuditLogger
 
 # 加載環境變數
 load_dotenv()
@@ -24,7 +25,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/bot.log'),
+        logging.FileHandler('bot.log'),
         logging.StreamHandler()
     ]
 )
@@ -67,10 +68,10 @@ VERIFY_TOKEN = os.getenv('WHATSAPP_VERIFY_TOKEN', 'ktc_audit_bot_2024')
 
 @app.route('/webhook', methods=['GET'])
 def webhook_verify():
-    \"\"\"
+    """
     驗證 WhatsApp Webhook
     當 WhatsApp 設定 Webhook 時會呼叫此端點
-    \"\"\"
+    """
     try:
         mode = request.args.get('hub.mode')
         token = request.args.get('hub.verify_token')
@@ -92,9 +93,9 @@ def webhook_verify():
 
 @app.route('/webhook', methods=['POST'])
 def webhook_receive():
-    \"\"\"
+    """
     接收 WhatsApp 訊息
-    \"\"\"
+    """
     try:
         data = request.get_json()
         logger.info(f"Received webhook data: {json.dumps(data, indent=2)}")
@@ -152,15 +153,9 @@ def health_check():
 
 @app.route('/test-audit', methods=['POST'])
 def test_audit():
-    \"\"\"
-    測試審核功能（用於開發和測試）
-    
-    POST 資料:
-    {
-        \"uid\": \"12345678\",
-        \"phone\": \"886912345678\"
-    }
-    \"\"\"
+    """
+    測試審核功能
+    """
     try:
         data = request.get_json()
         uid = data.get('uid')
@@ -187,16 +182,12 @@ def test_audit():
 
 @app.route('/test-sheets', methods=['GET'])
 def test_sheets():
-    \"\"\"
+    """
     測試 Google Sheets 連線
-    \"\"\"
+    """
     try:
         logger.info("Testing Google Sheets connection...")
-        
-        # 嘗試打開試算表
         sheets_client.open_spreadsheet()
-        
-        # 測試檢查 UID
         test_uid = "test_12345"
         exists = sheets_client.check_uid_exists(test_uid)
         
@@ -214,14 +205,9 @@ def test_sheets():
 
 @app.route('/test-bitunix', methods=['POST'])
 def test_bitunix():
-    \"\"\"
+    """
     測試 Bitunix API 連線
-    
-    POST 資料:
-    {
-        \"uid\": \"12345678\"
-    }
-    \"\"\"
+    """
     try:
         data = request.get_json()
         uid = data.get('uid')
@@ -230,7 +216,6 @@ def test_bitunix():
             return jsonify({'error': 'Missing uid'}), 400
         
         logger.info(f"Testing Bitunix validation for UID: {uid}")
-        
         success, result = bitunix_client.validate_user(uid)
         
         return jsonify({
@@ -246,15 +231,11 @@ def test_bitunix():
 
 @app.errorhandler(404)
 def not_found(error):
-    \"\"\"404 錯誤處理\"\"\"
     return jsonify({'error': 'Not found'}), 404
 
 
 @app.route('/audit-stats', methods=['GET'])
 def get_audit_stats():
-    """
-    獲取審核統計信息
-    """
     try:
         stats = audit_logger.get_audit_stats()
         return jsonify(stats), 200
@@ -265,9 +246,6 @@ def get_audit_stats():
 
 @app.route('/audit-history/<uid>', methods=['GET'])
 def get_user_history(uid):
-    """
-    獲取特定用戶的審核歷史
-    """
     try:
         history = audit_logger.get_user_audit_history(uid)
         return jsonify({
@@ -282,9 +260,6 @@ def get_user_history(uid):
 
 @app.route('/failed-audits', methods=['GET'])
 def get_failed_audits():
-    """
-    獲取最近失敗的審核記錄
-    """
     try:
         limit = request.args.get('limit', default=10, type=int)
         failed = audit_logger.get_failed_audits(limit)
@@ -299,16 +274,11 @@ def get_failed_audits():
 
 @app.errorhandler(500)
 def internal_error(error):
-    """500 錯誤處理"""
     logger.error(f"Internal server error: {str(error)}")
     return jsonify({'error': 'Internal server error'}), 500
 
 
 if __name__ == '__main__':
-    # 確保日誌目錄存在
-    os.makedirs('logs', exist_ok=True)
-    
-    # 啟動 Flask 應用
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
     
